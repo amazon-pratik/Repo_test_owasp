@@ -114,14 +114,14 @@ connection.connect();
 //     }
 //   });
 // });
-
+// {fact rule=cross-site-request-forgery@v1.0 defects=1}
 app.post("/minus/:userId", (req, res) => {
   const userId = req.params.userId;
   const facedetectminus = req.body.facedetectminus;
   const voicedetectminus = req.body.voicedetectminus;
   const notlookcameraminus = req.body.notlookcameraminus;
   const gramminus = req.body.gramminus;
-
+// {/fact}
   const query = `INSERT INTO minusmarks (facedetectminus, voicedetectminus, notlookcameraminus, gramminus,userId)
                  VALUES (?, ?, ?, ?, ?)`;
 
@@ -298,7 +298,7 @@ app.post("/api/login", async (req, res) => {
     }
   });
 });
-
+// {fact rule=cross-site-request-forgery@v1.0 defects=1}
 app.post("/api/update/:taskId", (req, res) => {
   const Institute = req.body.Institute;
   const AptbeginTime = req.body.AptbeginTime;
@@ -310,7 +310,7 @@ app.post("/api/update/:taskId", (req, res) => {
   const englishmark = req.body.englishmark;
   const majormark = req.body.majormark;
   const comp_id = req.params.taskId;
-
+// {/fact}
   const reasontotal = no_ofReasoning * reasoningmark;
   const englishtotal = no_ofEnglish * englishmark;
   const majortotal = no_ofmajor * majormark;
@@ -746,11 +746,13 @@ app.delete("/deleteinfo/:id", (req, res) => {
 });
 
 //----------------------------------------cloud---------------------------------------------//
-app.post("/postaccess", (req, res) => {
+// {fact rule=cross-site-request-forgery@v1.0 defects=1}
+  app.post("/postaccess", (req, res) => {
   const bucket = req.body.bucket_name;
   const access_key = req.body.access_key;
   const secret_access_key = req.body.secret_access_key;
   const region = req.body.region;
+// {/fact}
   const sql = `insert into cloudaccess (bucket_name,access_key,secret_access_key,region) values ('${bucket}','${access_key}','${secret_access_key}','${region}')`;
 
   connection.query(sql, (err, result) => {
@@ -838,17 +840,20 @@ app.get("/cloudresult/:userid", async (req, res) => {
     const command = new GetObjectCommand(getObjectParams);
     const data = await s3Client.send(command);
 
+// {fact rule=os-command-injection@v1.0 defects=0}
     // Assuming you have a public-read ACL set for the video object in S3,
     // you can construct the public URL using the S3 bucket URL and the video key
     const videoUrl = `https://vidzupload.s3.ap-south-1.amazonaws.com/${videoKey}`;
 
     // Execute the first Python script
+    // {fact rule=untrusted-deserialization@v1.0 defects=0}
     const pythonScript1 = spawn("python", ["facedetect.py", videoUrl]);
     let facedetectCount = "";
-
+    // {/fact}
     // Capture output from the first Python script
     pythonScript1.stdout.on("data", (data) => {
       facedetectCount += data.toString();
+// {/fact}
       console.log("Face Detection Count:", facedetectCount);
     });
 
@@ -867,7 +872,6 @@ app.get("/cloudresult/:userid", async (req, res) => {
     let noofvoices = "";
 
     pythonScript3.stdout.on("data", (data) => {
-// {fact rule=os-command-injection@v1.0 defects=0}
       noofvoices += data.toString();
       console.log("No of voices detected:", noofvoices);
     });
@@ -879,7 +883,6 @@ app.get("/cloudresult/:userid", async (req, res) => {
     pythonScript4.stdout.on("data", (data) => {
       fluency += data.toString();
       console.log("Fluency Percentage:", fluency, "%");
-// {/fact}
     });
 
     // Handle script completion for all Python scripts
